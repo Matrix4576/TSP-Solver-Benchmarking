@@ -59,10 +59,10 @@ def randomTour(graph: dict, n = None) -> list:
             nodes.add(i)
             nodes.add(j)
         n = max(nodes) + 1
-    tour = list(range(len(graph)))
+    tour = list(range(n))
     random.shuffle(tour)
     return tour
-def choiceByEntropy(graph: dict, curr: int, unvisited: set, beta = 10.0, n = None) -> list:
+def choiceByEntropy(graph: dict, curr: int, unvisited: set, beta = 10.0) -> list:
     candidates = []
     for c in unvisited:
         others = []
@@ -77,8 +77,8 @@ def choiceByEntropy(graph: dict, curr: int, unvisited: set, beta = 10.0, n = Non
                 dists.append(graph[curr, v])
                 prob = probability(dists, beta)
                 h = entropy(prob)
-        candidates.append((h, graph[curr, c], c))
-    return candidates[0][2]
+        candidates.append((h, graph[(curr, c)], c))
+    return sorted(candidates)[0][2]
 def solver(graph: dict, start: int = 0, beta = 10.0, n = None):
     if n is None:
         if not graph:
@@ -163,12 +163,12 @@ def graph(vertices, graph=MAP) -> dict:
             graph[(i, j)] = cost
             graph[(j, i)] = cost
     return graph
-inputSize = list(range(5, 20))
+inputSize = list(range(2, 11))
 entropyTime = []
 twoOptTime = []
 NNHueristicTime = []
 RecursionTime = []
-for i in range(5, 20):
+for i in range(2, 11):
     graph(i)
     startNode = random.randint(0, i - 1)
     stTime = time.perf_counter()
