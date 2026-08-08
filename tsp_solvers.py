@@ -156,45 +156,47 @@ MAP = {}
 def generate_graph(vertices, graph=MAP) -> dict:
     for i in range(vertices):
         for j in range(i + 1, vertices):
-            cost = random.randint(1, vertices)
+            cost = random.randint(1, 50)
             graph[(i, j)] = cost
             graph[(j, i)] = cost
     return graph
-n = int(input('Enter the number of vertices: '))
-startNode = int(input('Enter the starting point: '))
-MAP = generate_graph(n)
-G = nx.Graph()
-for (u, v), dist in MAP.items():
-    if u < v:
-        G.add_edge(u, v, weight=dist)
-pos = nx.kamada_kawai_layout(G, weight="weight")
-plt.figure(figsize=(10, 8))
-plt.title("Graph Representation")
-nx.draw_networkx_nodes(G, pos, node_color="skyblue", node_size=600)
-nx.draw_networkx_labels(
-    G, pos, font_size=12, font_family="sans-serif", font_weight="bold"
-)
-nx.draw_networkx_edges(G, pos, edge_color="gray", alpha=0.5)
-edge_labels = nx.get_edge_attributes(G, "weight")
-nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=9)
-plt.axis("off")
-plt.tight_layout()
-plt.show()
-entropySolver = solver(MAP, startNode)
-entropySolverCost = tour(entropySolver, MAP)
-print('Using Entropy: ', entropySolver)
-print('Using Entropy, cost: ', entropySolverCost)
-nnSolver = nn(MAP, startNode)
-nnSolverCost = tour(nnSolver, MAP)
-print('Using NN Hueristic: ', nnSolver)
-print('Using NN Hueristic, cost: ', nnSolverCost)
-twoOptSolver = twoOpt(randomTour(MAP, startNode), MAP)
-minCost = math.inf
-while twoOptSolver[0] < minCost: # type: ignore
-    minCost = twoOptSolver[0] # type: ignore
-    twoOptSolver = twoOpt(twoOptSolver[1], MAP) # type: ignore
-print('Using 2 Opt Improvement: ', twoOptSolver[1]) # type: ignore
-print('Using 2 Opt Improvement, cost: ', twoOptSolver[0]) # type: ignore
-recursionSolver = recursiveSolver(MAP, startNode)
-print('Using Recursion: ', recursionSolver[1])
-print('Using Recursion, cost: ', recursionSolver[0])
+def visualize(graph: dict):
+    G = nx.Graph()
+    for (u, v), dist in graph.items():
+        if u < v:
+            G.add_edge(u, v, weight=dist)
+    pos = nx.kamada_kawai_layout(G, weight="weight")
+    plt.figure(figsize=(10, 8))
+    plt.title("Graph Representation")
+    nx.draw_networkx_nodes(G, pos, node_color="skyblue", node_size=600)
+    nx.draw_networkx_labels(
+        G, pos, font_size=12, font_family="sans-serif", font_weight="bold"
+    )
+    nx.draw_networkx_edges(G, pos, edge_color="gray", alpha=0.5)
+    edge_labels = nx.get_edge_attributes(G, "weight")
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=9)
+    plt.axis("off")
+    plt.tight_layout()
+    plt.show()
+# n = int(input('Enter the number of vertices: '))
+# startNode = int(input('Enter the starting point: '))
+# MAP = generate_graph(n)
+# visualize(MAP)
+# entropySolver = solver(MAP, startNode)
+# entropySolverCost = tour(entropySolver, MAP)
+# print('Using Entropy: ', entropySolver)
+# print('Using Entropy, cost: ', entropySolverCost)
+# nnSolver = nn(MAP, startNode)
+# nnSolverCost = tour(nnSolver, MAP)
+# print('Using NN Hueristic: ', nnSolver)
+# print('Using NN Hueristic, cost: ', nnSolverCost)
+# twoOptSolver = twoOpt(randomTour(MAP, startNode), MAP)
+# minCost = math.inf
+# while twoOptSolver[0] < minCost: # type: ignore
+#     minCost = twoOptSolver[0] # type: ignore
+#     twoOptSolver = twoOpt(twoOptSolver[1], MAP) # type: ignore
+# print('Using 2 Opt Improvement: ', twoOptSolver[1]) # type: ignore
+# print('Using 2 Opt Improvement, cost: ', twoOptSolver[0]) # type: ignore
+# recursionSolver = recursiveSolver(MAP, startNode)
+# print('Using Recursion: ', recursionSolver[1])
+# print('Using Recursion, cost: ', recursionSolver[0])
