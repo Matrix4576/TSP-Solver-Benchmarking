@@ -1,5 +1,7 @@
 import random
 import math
+import matplotlib.pyplot as plt
+import networkx as nx
 def probability(distances: list, beta: float) -> list:
     if not distances:
         return []
@@ -29,6 +31,46 @@ def tour(tour: list, graph: dict):
         cost += graph[(tour[i], tour[i + 1])]
     cost += graph[(tour[-1], tour[0])]
     return cost
+def choiceByEntropy(graph: dict, curr: int, unvisited: set, beta = 0.25) -> list:
+    candidates = []
+    for c in unvisited:
+        others = []
+        for v in unvisited:
+            if v != c:
+                others.append(v)
+        if not others:
+            h = 0.0
+        else:
+            dists = []
+            for v in others:
+                dists.append(graph[curr, v])
+            prob = probability(dists, beta)
+            h = entropy(prob)
+        candidates.append((h, graph[(curr, c)], c)) # type: ignore
+    return sorted(candidates)[0][2]
+def solver(graph: dict, start: int = 0, beta = 10.0, n = None):
+    if n is None:
+        if not graph:
+            raise ValueError("Graph is empty, cannot infer number of nodes.")
+        nodes = set()
+        for (i, j) in graph.keys():
+            nodes.add(i)
+            nodes.add(j)
+        n = max(nodes) + 1
+    nodes = list(range(n))
+    visited = {start}
+    tour = [start]
+    curr = start
+    while len(visited) < n:
+        unvisited = []
+        for v in nodes:
+            if v not in visited:
+                unvisited.append(v)
+        nxt = choiceByEntropy(graph, curr, unvisited, beta) # type: ignore
+        tour.append(nxt) # type: ignore
+        visited.add(nxt) # type: ignore
+        curr = nxt
+    return tour
 def nn(graph: dict, start: int, n = None):
     if n is None:
         if not graph:
@@ -56,46 +98,6 @@ def randomTour(graph: dict, start: int, n=None) -> list:
     tour.remove(start)
     random.shuffle(tour)
     tour = [start] + tour
-    return tour
-def choiceByEntropy(graph: dict, curr: int, unvisited: set, beta = 10.0) -> list:
-    candidates = []
-    for c in unvisited:
-        others = []
-        for v in unvisited:
-            if v != c:
-                others.append(v)
-        if not others:
-            h = 0.0
-        else:
-            dists = []
-            for v in others:
-                dists.append(graph[curr, v])
-                prob = probability(dists, beta)
-                h = entropy(prob)
-        candidates.append((h, graph[(curr, c)], c))
-    return sorted(candidates)[0][2]
-def solver(graph: dict, start: int = 0, beta = 10.0, n = None):
-    if n is None:
-        if not graph:
-            raise ValueError("Graph is empty, cannot infer number of nodes.")
-        nodes = set()
-        for (i, j) in graph.keys():
-            nodes.add(i)
-            nodes.add(j)
-        n = max(nodes) + 1
-    nodes = list(range(n))
-    visited = {start}
-    tour = [start]
-    curr = start
-    while len(visited) < n:
-        unvisited = []
-        for v in nodes:
-            if v not in visited:
-                unvisited.append(v)
-        nxt = choiceByEntropy(graph, curr, unvisited, beta)
-        tour.append(nxt)
-        visited.add(nxt)
-        curr = nxt
     return tour
 def twoOpt(tours, graph, n = None):
     if n is None:
@@ -137,11 +139,11 @@ def recursiveSolver(graph: dict, start: int, visited = None, curr = None, cost =
     if visited is None:
         visited = set([start])
         curr = start
-    if len(visited) == len(nodes):
+    if len(visited) == len(nodes): # type: ignore
         return cost + graph.get((curr, start), math.inf), [curr, start]
     minCost = math.inf
     bestPath = []
-    for node in nodes:
+    for node in nodes: # type: ignore
         if node not in visited:
             costs = graph[(curr, node)]
             newVisit = visited | {node}
@@ -151,7 +153,7 @@ def recursiveSolver(graph: dict, start: int, visited = None, curr = None, cost =
                 bestPath = [curr] + path
     return minCost, bestPath
 MAP = {}
-def graph(vertices, graph=MAP) -> dict:
+def generate_graph(vertices, graph=MAP) -> dict:
     for i in range(vertices):
         for j in range(i + 1, vertices):
             cost = random.randint(1, vertices)
@@ -160,7 +162,24 @@ def graph(vertices, graph=MAP) -> dict:
     return graph
 n = int(input('Enter the number of vertices: '))
 startNode = int(input('Enter the starting point: '))
-graph(n)
+MAP = generate_graph(n)
+G = nx.Graph()
+for (u, v), dist in MAP.items():
+    if u < v:
+        G.add_edge(u, v, weight=dist)
+pos = nx.kamada_kawai_layout(G, weight="weight")
+plt.figure(figsize=(10, 8))
+plt.title("Graph Representation")
+nx.draw_networkx_nodes(G, pos, node_color="skyblue", node_size=600)
+nx.draw_networkx_labels(
+    G, pos, font_size=12, font_family="sans-serif", font_weight="bold"
+)
+nx.draw_networkx_edges(G, pos, edge_color="gray", alpha=0.5)
+edge_labels = nx.get_edge_attributes(G, "weight")
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=9)
+plt.axis("off")
+plt.tight_layout()
+plt.show()
 entropySolver = solver(MAP, startNode)
 entropySolverCost = tour(entropySolver, MAP)
 print('Using Entropy: ', entropySolver)
@@ -171,11 +190,11 @@ print('Using NN Hueristic: ', nnSolver)
 print('Using NN Hueristic, cost: ', nnSolverCost)
 twoOptSolver = twoOpt(randomTour(MAP, startNode), MAP)
 minCost = math.inf
-while twoOptSolver[0] < minCost:
-    minCost = twoOptSolver[0]
-    twoOptSolver = twoOpt(twoOptSolver[1], MAP)
-print('Using 2 Opt Improvement: ', twoOptSolver[1])
-print('Using 2 Opt Improvement, cost: ', twoOptSolver[0])
+while twoOptSolver[0] < minCost: # type: ignore
+    minCost = twoOptSolver[0] # type: ignore
+    twoOptSolver = twoOpt(twoOptSolver[1], MAP) # type: ignore
+print('Using 2 Opt Improvement: ', twoOptSolver[1]) # type: ignore
+print('Using 2 Opt Improvement, cost: ', twoOptSolver[0]) # type: ignore
 recursionSolver = recursiveSolver(MAP, startNode)
 print('Using Recursion: ', recursionSolver[1])
 print('Using Recursion, cost: ', recursionSolver[0])

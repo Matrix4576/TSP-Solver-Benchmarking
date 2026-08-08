@@ -75,9 +75,9 @@ def choiceByEntropy(graph: dict, curr: int, unvisited: set, beta = 10.0) -> list
             dists = []
             for v in others:
                 dists.append(graph[curr, v])
-                prob = probability(dists, beta)
-                h = entropy(prob)
-        candidates.append((h, graph[(curr, c)], c))
+            prob = probability(dists, beta)
+            h = entropy(prob)
+        candidates.append((h, graph[(curr, c)], c)) # type: ignore
     return sorted(candidates)[0][2]
 def solver(graph: dict, start: int = 0, beta = 10.0, n = None):
     if n is None:
@@ -97,9 +97,9 @@ def solver(graph: dict, start: int = 0, beta = 10.0, n = None):
         for v in nodes:
             if v not in visited:
                 unvisited.append(v)
-        nxt = choiceByEntropy(graph, curr, unvisited, beta)
-        tour.append(nxt)
-        visited.add(nxt)
+        nxt = choiceByEntropy(graph, curr, unvisited, beta) # type: ignore
+        tour.append(nxt) # type: ignore
+        visited.add(nxt) # type: ignore
         curr = nxt
     return tour
 def twoOpt(tours, graph, n = None):
@@ -142,11 +142,11 @@ def recursiveSolver(graph: dict, start: int, visited = None, curr = None, cost =
     if visited is None:
         visited = set([start])
         curr = start
-    if len(visited) == len(nodes):
+    if len(visited) == len(nodes): # type: ignore
         return cost + graph.get((curr, start), math.inf), [curr, start]
     minCost = math.inf
     bestPath = []
-    for node in nodes:
+    for node in nodes: # type: ignore
         if node not in visited:
             costs = graph[(curr, node)]
             newVisit = visited | {node}
@@ -179,9 +179,9 @@ for i in range(2, 11):
     stTime = time.perf_counter()
     newTour = twoOpt(tourList, MAP)
     minCost = math.inf
-    while newTour[0] < minCost:
-        minCost = newTour[0]
-        newTour = twoOpt(newTour[1], MAP)
+    while newTour[0] < minCost: # type: ignore
+        minCost = newTour[0] # type: ignore
+        newTour = twoOpt(newTour[1], MAP) # type: ignore
     enTime = time.perf_counter()
     twoOptTime.append(enTime - stTime)
     stTime = time.perf_counter()
